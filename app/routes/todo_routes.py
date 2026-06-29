@@ -1,18 +1,21 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.repositories.todo_respository import TodoRepository
+from app.schemas.todo import TodoCreate, TodoResponse
+from app.services.jwt_service import get_current_user
 
-
-router = APIRouter(prefix="/todos", tags=["Todos"])
+todo_router = APIRouter(prefix="/todos", tags=["Todos"])
 
 repository = TodoRepository()
 
-@router.get("/")
-def get_all_todos(db : Session = Depends(get_db)):
+@todo_router.get("/", response_model=List[TodoResponse])
+def get_all_todos(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     return repository.get_all_todos(db)
 
-@router.post("/")
-def create_todo(title: str, db: Session = Depends(get_db)):
-    return repository.create_todo(db, title)
+@todo_router.post("/", response_model=TodoResponse)
+def create_todo(todo: TodoCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    return repository.create_todo(db, todo.title, user_id=current_user["id"], description=todo.description)

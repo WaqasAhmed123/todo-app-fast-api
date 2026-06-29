@@ -2,22 +2,19 @@ from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-connection_string = quote_plus(
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=DESKTOP-8TOH6OI;"
-    "DATABASE=todo_app_python;"
-    "UID=sa;"
-    "PWD=sa123;"
-    "TrustServerCertificate=yes;"
-)
+from app.config import settings
 
-DATABASE_URL= f"mssql+pyodbc:///?odbc_connect={connection_string}"
- 
+# Use the configured DATABASE_URL from settings.
+DATABASE_URL = settings.DATABASE_URL
 engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+# Import models to register them with Base
+from app.models.user import User  # noqa
+from app.models.todo import Todo  # noqa
 
 def get_db():
     db = SessionLocal()
