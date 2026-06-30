@@ -219,10 +219,19 @@ alembic history
 - **Solution**: `pip install pydantic-settings`
 
 **Issue**: Cannot connect to SQL Server
-- **Solution**: Verify DATABASE_URL in `.env` and ensure SQL Server is running
+- **Solution**: Verify DATABASE_URL in `.env` and ensure SQL Server is running. If running SQL Server locally on Windows and connecting from a Docker container, configure SQL Server to listen on `IPAll` port 1433 in SQL Server Configuration Manager and map the hostname using `--add-host=DESKTOP-8TOH6OI:host-gateway`.
+
+**Issue**: SQL Server container crashes with `This program requires a machine with at least 2000 megabytes of memory`
+- **Solution**: If running on a 1 GB instance like a `t2.micro` EC2 instance, you must configure a swap file (virtual RAM) on the host (e.g. `sudo fallocate -l 1.5G /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`). Alternatively, host your SQL Server instance in AWS RDS (which offers a Free Tier-eligible Express Edition) to offload the database entirely from the EC2 instance.
+
+**Issue**: `no space left on device` when pulling/extracting Docker images on EC2
+- **Solution**: The default EC2 storage is often 8 GB. You can clean up the Docker cache using `sudo docker system prune -a -f --volumes`. You should also use the `python:3.12-slim` base image to minimize disk footprint. If necessary, modify your EC2 EBS volume size to 15 GB or 20 GB in the AWS Console and reboot to automatically expand the filesystem.
+
+**Issue**: `CREATE TABLE permission denied in database 'master'` on AWS RDS
+- **Solution**: RDS administrative users do not have permissions to write tables directly inside the system `master` database. Connect to `master` first and execute `CREATE DATABASE todo_app_python;` to create a dedicated application database, then configure your FastAPI connection string to point to this new database.
 
 **Issue**: Alembic migration fails
-- **Solution**: Run `alembic upgrade head` and check migration version
+- **Solution**: Run `alembic upgrade head` and check migration version.
 
 ---
 
